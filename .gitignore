@@ -1,0 +1,59 @@
+# ---- 配置与密钥（绝对不能提交） ----
+config.json
+config.local.json
+*.local.json
+
+# 登录密钥 / 认证凭据
+proxy-login-key.txt
+basicauth.txt
+worker-secret.txt
+*.pem
+*.key
+*.pfx
+*.jks
+*.keystore
+
+# Cloudflare 隧道凭据（形如 <隧道ID>.json，正常应放在 ~/.cloudflared 下）
+[t0-9a-f][0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*.json
+
+# ---- 运行产物 ----
+*.log
+logs/
+state-*.json
+weekly-state.json
+reminders-state.json
+*.out
+*.err
+latest-url.txt
+
+# 报告与日记（含个人行程与工作内容）
+reports/
+diary/
+*.apk
+
+# ---- Android 构建 ----
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/app/release/
+android/.idea/
+
+# ---- 依赖与缓存 ----
+node_modules/
+.pnpm-store/
+__pycache__/
+*.pyc
+
+# ---- 编辑器与系统 ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- 归档（个人历史，不发布） ----
+_archive/
+_scratch/
+*.bak
+*.bak-*

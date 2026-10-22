@@ -1,0 +1,53 @@
+{
+  "_comment": "复制为 config.json 后填写。所有路径支持 ~ 展开为当前用户目录。",
+
+  "domain": "example.com",
+
+  "tunnel": {
+    "_comment": "Cloudflare 命名隧道。cloudflared 建议装在 ~/.cloudflared/ 下，不要放在项目目录里（见 docs/pitfalls.md）",
+    "name": "dsh",
+    "configPath": "~/.cloudflared/config.yml",
+    "cloudflaredPath": "~/.cloudflared/cloudflared.exe"
+  },
+
+  "origin": {
+    "_comment": "要代理的本机服务。desktopProcess 用于健康检查时判断源站是否在跑",
+    "host": "127.0.0.1",
+    "port": 3080,
+    "desktopProcess": "DeepSeek Harness.exe",
+    "desktopProcessMatch": "dsh-desktop-host",
+    "launcher": ""
+  },
+
+  "auth": {
+    "_comment": "DSH 的浏览器会话密钥存放位置。不同版本可能变化，见 docs/auth-internals.md",
+    "secretFile": "~/.dsh/.credentials.yaml",
+    "secretRecord": "client-connection/browser-session",
+    "loginPathSuffix": "__dsh_login",
+    "cookieTtlDays": 29,
+    "_cookieTtlNote": "服务端硬上限是 30 天，31 天会被拒。这里留 1 天余量。"
+  },
+
+  "notify": {
+    "_comment": "钉钉自定义机器人。签名必须放在 URL query 上，不是 JSON body",
+    "dingtalkWebhook": "",
+    "dingtalkSecret": "",
+    "enabled": false
+  },
+
+  "duty": {
+    "_comment": "故障时先诊断再动手。只有 tunnel 层异常才重建隧道",
+    "enabled": true,
+    "autoStartDesktop": true,
+    "autoRestartProxy": true,
+    "remediateCooldownMs": 600000
+  },
+
+  "reports": {
+    "_comment": "日报/周报输出目录与数据源",
+    "outputDir": "~/reports",
+    "workRoot": "~/projects",
+    "sessionDir": "~/.dsh/sessions",
+    "gitAuthor": ""
+  }
+}
