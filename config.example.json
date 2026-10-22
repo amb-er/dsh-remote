@@ -3,6 +3,11 @@
 
   "domain": "example.com",
 
+  "runtime": {
+    "_comment": "node 可执行文件。留空则用 PATH 里的 node。需要 22 以上（报表模块用了 zlib.zstdDecompress）。",
+    "nodePath": ""
+  },
+
   "tunnel": {
     "_comment": "Cloudflare 命名隧道。cloudflared 建议装在 ~/.cloudflared/ 下，不要放在项目目录里（见 docs/pitfalls.md 第 1 条）",
     "name": "dsh",

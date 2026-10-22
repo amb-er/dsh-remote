@@ -163,15 +163,55 @@ cloudflared tunnel run dsh
 
 现在手机访问 `https://your-domain.example` 应该能打开了。
 
-### 6. 让它常驻（可选）
+### 6. 检查环境
 
 ```powershell
-.\scripts\register-tasks.ps1
+powershell -File scripts/install.ps1
 ```
 
-注册计划任务：隧道守护、代理守护。**默认没有开机自启**，需要的话见脚本内注释。
+只做检查、不改任何东西。会逐项验证：Node 版本、cloudflared 位置（**不能在项目目录里**）、
+隧道配置与 ingress 合法性、会话密钥能否解出 32 字节、源站进程是否在跑，
+最后起一次代理打登录取证，确认返回 303。
+
+全部通过后再往下走。
+
+### 7. 注册计划任务
+
+```powershell
+powershell -File scripts/register-tasks.ps1           # 注册（会先确认）
+powershell -File scripts/register-tasks.ps1 -Status   # 查看
+powershell -File scripts/register-tasks.ps1 -Unregister
+```
+
+注册两个任务，都指向 `scripts/run-loop.ps1`，由它在进程内负责「挂了就重启」。
+
+> **为什么不能用计划任务自带的「失败后重启」**：进程正常退出（哪怕退出码非 0）
+> 在计划任务看来不算失败，重启策略不会触发。实测 `LastTaskResult` 一直是 0、
+> `State` 一直是 `Ready`，策略从来没生效过。
+
+> ⚠️ **固有限制**：任务只能是「登录时触发 + 交互式会话」，因为源站是 Electron 桌面应用，
+> 必须有桌面会话才能跑。所以**重启后如果没人登录桌面，隧道不会自己起来**。
+> 这不是脚本能解决的，是架构决定的。
 
 ---
+
+## 脚本
+
+| 脚本 | 作用 |
+|---|---|
+| `scripts/install.ps1` | 环境检查 + 试跑。**只检查，不改配置**（唯一会写的是复制 config 模板） |
+| `scripts/register-tasks.ps1` | 注册 / 注销 / 查看计划任务 |
+| `scripts/run-loop.ps1` | 进程内重启循环，被计划任务调用 |
+| `scripts/_common.ps1` | 公共函数（读配置、展开 `~`、定位 node） |
+
+`run-loop.ps1` 里有三个不显眼但必要的细节：
+
+1. **必须用 `Start-Process -Wait`**。只用 `WaitForExit()` 在 `-NoNewWindow` 场景下会提前返回，
+   循环误判进程已退出就重复拉起——实测 7 秒起了 3 个进程，而端口被第一个占着，
+   后两个立刻退出，日志开始疯狂滚动。
+2. **连续短命就退避**。运行不足 20 秒视为「启动即失败」，重试间隔按 2 的幂增长（上限 300 秒）。
+3. **清理同目标孤儿进程**。连续 3 次短命后，把命令行里带同一目标脚本的 node 进程清掉，
+   避免越堆越多。只匹配目标文件名，不会误杀别的 node。
 
 ## 管理界面
 
