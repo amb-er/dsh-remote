@@ -46,14 +46,15 @@ const cfg = require('../../lib/config');
 const b64url = (buf) => Buffer.from(buf).toString('base64')
   .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-/** 上游期望的 authority（Host 头里的值）。 */
+/**
+ * Host 改写值，同时也是 cookie 的 authority。
+ *
+ * 注意这里是**代理自己的监听地址**，不是上游那个动态端口。
+ * 上游只校验"是不是回环地址"，端口具体是多少无所谓；
+ * 但 Host 和 cookie 里的 authority 必须一致，否则 cookie 名对不上、校验失败。
+ */
 function authority() {
-  return cfg.get('origin.host', '127.0.0.1') + ':' + cfg.get('origin.port', 3080);
-}
-
-/** 公网侧的 origin，用于改写 Origin / Referer。 */
-function publicOrigin() {
-  return cfg.publicUrl();
+  return cfg.get('proxy.host', '127.0.0.1') + ':' + cfg.get('proxy.listenPort', 3080);
 }
 
 /**
@@ -176,7 +177,7 @@ function verify(cookieValue) {
 }
 
 module.exports = {
-  authority, publicOrigin, cookieName,
+  authority, cookieName,
   readSecretRaw, secretKey,
   mint, extractFromHeader, verify,
 };

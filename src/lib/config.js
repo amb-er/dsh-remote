@@ -36,7 +36,10 @@ function load() {
 
   let raw;
   try {
-    raw = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    // 去掉可能的 BOM：PowerShell 的 Set-Content/Out-File 默认会写 UTF-8 BOM，
+    // 而 JSON.parse 遇到 BOM 会直接报 "Unexpected token"，报错位置还很误导。
+    const text = fs.readFileSync(CONFIG_PATH, 'utf8').replace(/^\uFEFF/, '');
+    raw = JSON.parse(text);
   } catch (e) {
     console.error('config.json 解析失败：' + e.message);
     process.exit(1);

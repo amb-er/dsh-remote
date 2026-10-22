@@ -4,23 +4,29 @@
   "domain": "example.com",
 
   "tunnel": {
-    "_comment": "Cloudflare 命名隧道。cloudflared 建议装在 ~/.cloudflared/ 下，不要放在项目目录里（见 docs/pitfalls.md）",
+    "_comment": "Cloudflare 命名隧道。cloudflared 建议装在 ~/.cloudflared/ 下，不要放在项目目录里（见 docs/pitfalls.md 第 1 条）",
     "name": "dsh",
     "configPath": "~/.cloudflared/config.yml",
     "cloudflaredPath": "~/.cloudflared/cloudflared.exe"
   },
 
-  "origin": {
-    "_comment": "要代理的本机服务。desktopProcess 用于健康检查时判断源站是否在跑",
+  "proxy": {
+    "_comment": "本地代理监听地址。它同时也是 Host 改写值和 cookie 的 authority——三者必须一致。",
     "host": "127.0.0.1",
-    "port": 3080,
+    "listenPort": 3080,
+    "portCacheMs": 300000,
+    "_portCacheNote": "桌面端端口发现结果的缓存时长。太短会让每次请求都拉起 PowerShell，太长则重启后有盲区。"
+  },
+
+  "origin": {
+    "_comment": "要代理的本机服务。端口是动态的，由代理自动发现，所以这里不写端口。",
     "desktopProcess": "DeepSeek Harness.exe",
     "desktopProcessMatch": "dsh-desktop-host",
     "launcher": ""
   },
 
   "auth": {
-    "_comment": "DSH 的浏览器会话密钥存放位置。不同版本可能变化，见 docs/auth-internals.md",
+    "_comment": "会话密钥存放位置与 TTL。不同版本的 DSH 可能变化，见 docs/auth-internals.md",
     "secretFile": "~/.dsh/.credentials.yaml",
     "secretRecord": "client-connection/browser-session",
     "loginPathSuffix": "__dsh_login",
@@ -28,15 +34,23 @@
     "_cookieTtlNote": "服务端硬上限是 30 天，31 天会被拒。这里留 1 天余量。"
   },
 
+  "pwa": {
+    "_comment": "可选。把 192/512 的 PNG 图标放进 assetsDir，代理就会提供可安装的 PWA。目录不存在则自动关闭。",
+    "assetsDir": "./assets/pwa",
+    "name": "DeepSeek Harness",
+    "shortName": "DSH",
+    "themeColor": "#0b1220"
+  },
+
   "notify": {
-    "_comment": "钉钉自定义机器人。签名必须放在 URL query 上，不是 JSON body",
+    "_comment": "钉钉自定义机器人。签名必须放在 URL query 上，不是 JSON body；失败也返回 HTTP 200，必须解析 errcode。",
     "dingtalkWebhook": "",
     "dingtalkSecret": "",
     "enabled": false
   },
 
   "duty": {
-    "_comment": "故障时先诊断再动手。只有 tunnel 层异常才重建隧道",
+    "_comment": "故障时先诊断再动手。只有隧道层异常才重建隧道",
     "enabled": true,
     "autoStartDesktop": true,
     "autoRestartProxy": true,
