@@ -173,6 +173,41 @@ cloudflared tunnel run dsh
 
 ---
 
+## 管理界面
+
+```powershell
+powershell -STA -File src/gui/tunnel-gui.ps1
+```
+
+图形化管理 ingress 分流规则，不用手改 YAML。
+
+| 能做 | 说明 |
+|---|---|
+| 查看状态 | 守护 / cloudflared / 代理 / 源站，四行分开，一眼看出哪一环坏了 |
+| 增删改规则 | 域名 + 端口 + 备注 |
+| 停用 / 启用 | 从 ingress 移除但保留域名与备注，随时恢复 |
+| 启停隧道 | 直接操作计划任务（界面里的「重启」只是让守护重拉进程） |
+| 登录链接 | 显示并复制 `https://<域名>/<loginPath>?key=...` |
+| 查看日志 | 最近 50 行 |
+
+几个设计决定：
+
+- **备注**写成 YAML 注释（`# ...`），配置文件仍然合法，人肉打开也看得懂
+- **停用**不是注释掉那几行，而是移到旁挂文件 `disabled-routes.json`。
+  注释形式在重新读取时无法可靠区分「被停用的规则」和「普通说明注释」
+- **写盘前先校验**：先写临时文件、跑 `cloudflared ingress validate`，通过才落盘。
+  坏配置永远没机会把隧道搞挂
+- **入口域名不能停用**：它是守护探活的目标，停掉会触发误判和反复重建
+
+自检（不弹窗，只跑逻辑）：
+
+```powershell
+powershell -STA -File src/gui/tunnel-gui.ps1 -Selftest
+```
+
+会验证 YAML 读写往返、备注保留、兜底规则位置、域名/端口校验、安全写入兜底，
+并断言**真实配置一个字节都没动**。
+
 ## 配置说明
 
 全部配置在 `config.json`，字段含义见 [config.example.json](config.example.json)。
